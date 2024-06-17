@@ -72,7 +72,7 @@ gm.post_code_execute(function(self, other, code, result, flags)
             local drone_x = params['pos_x']
             local drone_y = params['pos_y'] + (i-1) * params['displacement_y']
             local ratio = drone.hp/drone.maxhp
-            local hp_colour = gm.make_colour_rgb(255*(1-ratio), 255*ratio, 0) -- from green at full hp to red at low hp
+            local hp_colour = gm.make_colour_rgb(255*(1-ratio), 175*ratio, 0) -- from green at full hp to red at low hp
     
             gm.draw_rectangle_colour(drone_x-53, drone_y-8, drone_x+53 , drone_y+10, bg_colour, bg_colour, bg_colour, bg_colour, false) -- healthbare bg
             gm.draw_rectangle_colour(drone_x-50, drone_y-5, drone_x-50 + 100*ratio, drone_y+7, hp_colour, hp_colour, hp_colour, hp_colour, false) -- healthbar
