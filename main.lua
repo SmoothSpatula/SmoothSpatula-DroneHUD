@@ -52,8 +52,12 @@ end)
 -- ========== Main ==========
 
 local surf_drones = -1
-local text_colour = gm.make_colour_rgb(0, 0, 0)
+local text_colour = 16777215 -- white
 local bg_colour = gm.make_colour_rgb(73,74,91)
+
+local drone_y = 0
+local ratio = 0
+local hp_colour = gm.make_colour_rgb(136, 211,103)
 
 gm.post_code_execute(function(self, other, code, result, flags)
     if not gm.variable_global_get("__run_exists") then return end
@@ -66,18 +70,17 @@ gm.post_code_execute(function(self, other, code, result, flags)
         surf_drones = gm.surface_create(gm.camera_get_view_width(cam), gm.camera_get_view_height(cam))
         gm.surface_set_target(surf_drones)
         gm.draw_clear_alpha(0, 0)
-        local drones = Helper.find_active_instance_all(gm.constants.pDrone) 
+        local drones = Helper.find_active_instance_all(gm.constants.pDrone)
         -- Cycle through the drones
         for i, drone in ipairs(drones) do
-            local drone_x = params['pos_x']
-            local drone_y = params['pos_y'] + (i-1) * params['displacement_y']
-            local ratio = drone.hp/drone.maxhp
-            local hp_colour = gm.make_colour_rgb(255*(1-ratio), 175*ratio, 0) -- from green at full hp to red at low hp
+            drone_y = params['pos_y'] + (i-1) * params['displacement_y']
+            ratio = drone.hp/drone.maxhp
+            hp_colour = gm.make_colour_rgb(136*ratio+180*(1-ratio), 211*ratio+73*(1-ratio), 103*ratio+73*(1-ratio)) -- from green at full hp to red at low hp
     
-            gm.draw_rectangle_colour(drone_x-53, drone_y-8, drone_x+53 , drone_y+10, bg_colour, bg_colour, bg_colour, bg_colour, false) -- healthbare bg
-            gm.draw_rectangle_colour(drone_x-50, drone_y-5, drone_x-50 + 100*ratio, drone_y+7, hp_colour, hp_colour, hp_colour, hp_colour, false) -- healthbar
-            gm.draw_text_colour(drone_x, drone_y, drone.name, text_colour, text_colour, text_colour, text_colour, 1)
-            gm.draw_sprite_ext(drone.sprite_index, 1, drone_x+53, drone_y, 0.5, 0.5, 0.0, 16777215, 1.0) -- small drone picture
+            gm.draw_rectangle_colour(params['pos_x']-53, drone_y-8, params['pos_x']+53 , drone_y+10, bg_colour, bg_colour, bg_colour, bg_colour, false) -- healthbare bg
+            gm.hud_draw_health(drone, bg_colour, params['pos_x']-50, drone_y-5, 100, 12, true, hp_colour)
+            gm.draw_sprite_ext(drone.sprite_index, 1, params['pos_x']+55, drone_y, 0.5, 0.5, 0.0, 16777215, 1.0) -- small drone picture
+            
         end
     
         gm.surface_reset_target()
