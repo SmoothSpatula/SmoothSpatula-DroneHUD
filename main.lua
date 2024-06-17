@@ -65,19 +65,19 @@ gm.post_code_execute(function(self, other, code, result, flags)
         local cam = gm.view_get_camera(0)
         surf_drones = gm.surface_create(gm.camera_get_view_width(cam), gm.camera_get_view_height(cam))
         gm.surface_set_target(surf_drones)
-        gm.draw_clear_alpha(0, 0) --put this here because I can't draw it with the map
+        gm.draw_clear_alpha(0, 0)
         local drones = Helper.find_active_instance_all(gm.constants.pDrone) 
-        -- Display the players
+        -- Cycle through the drones
         for i, drone in ipairs(drones) do
             local drone_x = params['pos_x']
             local drone_y = params['pos_y'] + (i-1) * params['displacement_y']
             local ratio = drone.hp/drone.maxhp
-            local hp_colour = gm.make_colour_rgb(255*(1-ratio), 255*ratio, 0)
+            local hp_colour = gm.make_colour_rgb(255*(1-ratio), 255*ratio, 0) -- from green at full hp to red at low hp
     
-            gm.draw_rectangle_colour(drone_x-53, drone_y-8, drone_x+53 , drone_y+10, bg_colour, bg_colour, bg_colour, bg_colour, false)
-            gm.draw_rectangle_colour(drone_x-50, drone_y-5, drone_x-50 + 100*ratio, drone_y+7, hp_colour, hp_colour, hp_colour, hp_colour, false)
+            gm.draw_rectangle_colour(drone_x-53, drone_y-8, drone_x+53 , drone_y+10, bg_colour, bg_colour, bg_colour, bg_colour, false) -- healthbare bg
+            gm.draw_rectangle_colour(drone_x-50, drone_y-5, drone_x-50 + 100*ratio, drone_y+7, hp_colour, hp_colour, hp_colour, hp_colour, false) -- healthbar
             gm.draw_text_colour(drone_x, drone_y, drone.name, text_colour, text_colour, text_colour, text_colour, 1)
-            
+            gm.draw_sprite_ext(drone.sprite_index, 1, drone_x+53, drone_y, 0.5, 0.5, 0.0, 16777215, 1.0) -- small drone picture
         end
     
         gm.surface_reset_target()
@@ -89,82 +89,3 @@ end)
 gm.pre_script_hook(gm.constants.__input_system_tick, function(self, other, result, args)
     zoom_scale = gm.prefs_get_hud_scale()
 end)
-
-
--- Testing stuff
-
--- gui.add_always_draw_imgui(function()
---     if ImGui.IsKeyPressed(80) then --P
---         -- local player = Helper.get_client_player()
---         local drones = Helper.find_active_instance_all(gm.constants.pDrone)
---         for _,drone in ipairs(drones) do
---             print(drone.object_name)
---             print(drone.name)
---             print(drone.hp.." / "..drone.maxhp)
---             print(drone.sprite_idle)
---             print(drone.sprite_index)
---         end
---         print("P")
-
-
---         local pl = Helper.get_client_player()
---         --pl.image_xscale = 0.5
---         --pl.image_yscale = 0.5
---         --pl.ystart = 20
---         --pl.xstart = -20
---     end
--- end)
-
-
--- local filename = "skills.txt"
--- local skills = gm.variable_global_get("class_skill")
--- i = 215
--- io.open(filename,"w"):close()
--- file = io.open(filename, "a")
--- file:write("Sprites dump new\n\n")
--- --string.gmatch(tostring(skills[i][3]), '%.()%.')
--- while i<300 do
---     --if skills[i] ==
---     local str = tostring(skills[i][2])
---     print(i.. " - "..str.. "\n")
---     file:write(i.. " - "..str.. "\n")
---     i = i + 1
--- end
-
---some bosses have enough attacks
--- Imp Overlord -procs with skills
--- gm.actor_skill_set(player, 0, 169) -- proc
--- gm.actor_skill_set(player, 1, 171) -- proc
--- gm.actor_skill_set(player, 2, 172) -- movement
--- gm.actor_skill_set(player, 3, 173) -- proc
-
-
--- Sprite index
-
-
--- 312 new boss jump
--- 464, 670,  cool animation
--- 672 invisible
-
---587, 589, 590, 596, 600 tower giant guy
-
--- 930 --before a bit Scavenger walk idle
-
--- 1040~ providence anims
-
--- 1211~ numbers
-
-
--- Scavenger guy 
--- gm.actor_skill_set(player, 0, 174) -- no proc
--- gm.actor_skill_set(player, 1, 175) -- procs
--- gm.actor_skill_set(player, 2, 176) -- no proc
--- gm.actor_skill_set(player, 3, 177) -- no proc
-
-
--- gm.post_script_hook(gm.constants.instance_create_depth, function(self, other, result, args)
---     print(result.value)
---     if not result.value.player_id then
---         result.value.sprite_index = math.random(1, 2000)
---     end
--- end)
