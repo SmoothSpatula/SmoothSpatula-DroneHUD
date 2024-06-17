@@ -5,8 +5,8 @@ mods.on_all_mods_loaded(function() for k, v in pairs(mods) do if type(v) == "tab
 
 mods.on_all_mods_loaded(function() for k, v in pairs(mods) do if type(v) == "table" and v.tomlfuncs then Toml = v end end 
     params = {
-        pos_x = 50,
-        pos_y = 100,
+        pos_x = 57,
+        pos_y = 251,
         scale = 1.0,
         displacement_y = 22,
         drone_hud_enabled = true,
