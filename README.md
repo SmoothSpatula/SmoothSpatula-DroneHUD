@@ -1,6 +1,6 @@
 # SmoothSpatula-DroneHUD
 ---
-Displays your drone's health on the HUD. Works in Multiplayer.
+Displays your drone's health, as well as your turrets and friends on the HUD. Works in Multiplayer.
 
 ## Special Thanks To
 * The Return Of Modding team
