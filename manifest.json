@@ -1,8 +1,8 @@
 {
 	"name": "DroneHUD",
-	"version_number": "1.0.1",
+	"version_number": "1.0.2",
 	"website_url": "https://github.com/SmoothSpatula/SmoothSpatula-DroneHUD",
-	"description": "Displays your drone's health on the HUD.",
+	"description": "Displays your drone's health on the HUD, as well as your turrets and other friends.",
 	"dependencies": [
 		"ReturnOfModding-ReturnOfModding-1.0.32",
 		"Klehrik-HelperFunctions-1.0.5",
