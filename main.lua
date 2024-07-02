@@ -1,4 +1,4 @@
--- DroneHUD v1.0.1
+-- DroneHUD v1.0.2
 -- SmoothSpatula
 log.info("Successfully loaded ".._ENV["!guid"]..".")
 mods.on_all_mods_loaded(function() for k, v in pairs(mods) do if type(v) == "table" and v.hfuncs then Helper = v end end end)
@@ -14,12 +14,13 @@ mods.on_all_mods_loaded(function() for k, v in pairs(mods) do if type(v) == "tab
         displacement_y = 22,
         drone_hud_enabled = true,
         healthbar_alpha = 1.0,
-        max_hp_colour = {136, 211,103},
-        low_hp_colour = {180, 73, 73}
+        maxhp_colour = {136/255, 211/255,103/255},
+        lowhp_colour = {180/255, 73/255, 73/255},
+
     }
     params = Toml.config_update(_ENV["!guid"], params) -- Load Save
-    maxhp_r, maxhp_g, maxhp_b = math.floor(params['max_hp_colour'][1]*255), math.floor(params['max_hp_colour'][2]*255), math.floor(params['max_hp_colour'][3]*255)
-    lowhp_r, lowhp_g, lowhp_b = math.floor(params['low_hp_colour'][1]*255), math.floor(params['low_hp_colour'][2]*255), math.floor(params['low_hp_colour'][3]*255)
+    maxhp_r, maxhp_g, maxhp_b = math.floor(params['maxhp_colour'][1]*255), math.floor(params['maxhp_colour'][2]*255), math.floor(params['maxhp_colour'][3]*255)
+    lowhp_r, lowhp_g, lowhp_b = math.floor(params['lowhp_colour'][1]*255), math.floor(params['lowhp_colour'][2]*255), math.floor(params['lowhp_colour'][3]*255)
     pos_x = params['pos_x']
 end)
 
@@ -37,7 +38,7 @@ end)
 gui.add_to_menu_bar(function()
     local new_value, clicked = ImGui.DragInt("X position from the  left part of the screen", params['pos_x'], 1, 0, gm.display_get_gui_width()//zoom_scale)
     if clicked then
-        params['pos_x'] = new_value
+        params['pos_x'] = new_value   
         pos_x = new_value
         Toml.save_cfg(_ENV["!guid"], params)
     end
@@ -52,7 +53,7 @@ gui.add_to_menu_bar(function()
 end)
 
 gui.add_to_menu_bar(function()
-    local new_value, clicked = ImGui.DragInt("Y distance between each Healthbar", params['displacement_y'], 1, 0, gm.display_get_gui_height()//zoom_scale)
+    local new_value, clicked = ImGui.DragInt("Y distance between each Healthbar", params['displacement_y'], 1, 0, 200)
     if clicked then
         params['displacement_y'] = new_value
         Toml.save_cfg(_ENV["!guid"], params)
@@ -70,18 +71,18 @@ end)
 
 
 gui.add_to_menu_bar(function()
-    local col, used = ImGui.ColorPicker3("Max HP Colour", params['max_hp_colour'])
+    local col, used = ImGui.ColorPicker3("Max HP Colour", params['maxhp_colour'])
     if used then
-        params['max_hp_colour'] = col
+        params['maxhp_colour'] = col
         Toml.save_cfg(_ENV["!guid"], params)
         maxhp_r, maxhp_g, maxhp_b = math.floor(col[1]*255), math.floor(col[2]*255), math.floor(col[3]*255)
     end
 end)
 
 gui.add_to_menu_bar(function()
-    local col, used = ImGui.ColorPicker3("Low HP Colour", params['low_hp_colour'])
+    local col, used = ImGui.ColorPicker3("Low HP Colour", params['lowhp_colour'])
     if used then
-        params['low_hp_colour'] = col
+        params['lowhp_colour'] = col
         Toml.save_cfg(_ENV["!guid"], params)
         lowhp_r, lowhp_g, lowhp_b = math.floor(col[1]*255), math.floor(col[2]*255), math.floor(col[3]*255)
     end
@@ -89,45 +90,66 @@ end)
 
 -- ========== Main ==========
 
-local surf_drones = -1
 local text_colour = 16777215 -- white
 local bg_colour = gm.make_colour_rgb(73,74,91)
 
-local drone_y = 0
+local friend_y = 0
 local ratio = 0
 local hp_colour = gm.make_colour_rgb(136, 211,103)
-local cam = nil
+local hud_scale = 1.0
+local options_menu = false
+local sprite_scale = 0.5
 
 
 gm.post_code_execute(function(self, other, code, result, flags)
-    if not gm.variable_global_get("__run_exists") then return end
-    if code.name:match("oInit_Draw_7") then
+    if not gm.variable_global_get("__run_exists") or options_menu then return end
+    if code.name:match("oInit_Draw_6") then
         
-        cam = gm.view_get_camera(0)
-        surf_drones = gm.surface_create(gm.camera_get_view_width(cam), gm.camera_get_view_height(cam))
-        gm.surface_set_target(surf_drones)
-        gm.draw_clear_alpha(0, 0)
-        gm.draw_set_alpha(params['healthbar_alpha'])
-        local drones = Helper.find_active_instance_all(gm.constants.pDrone)
-        -- Cycle through the drones
-        drone_y = params['pos_y']
-        for i, drone in ipairs(drones) do
-            ratio = drone.hp/drone.maxhp
-            hp_colour = gm.make_colour_rgb(maxhp_r*ratio+lowhp_r*(1-ratio),  maxhp_g*ratio+lowhp_g*(1-ratio), maxhp_b*ratio+lowhp_b*(1-ratio)) -- from green at full hp to red at low hp
-            
-            gm.draw_rectangle_colour(pos_x-53, drone_y-8, pos_x+53 , drone_y+10, bg_colour, bg_colour, bg_colour, bg_colour, false) -- healthbare bg
-            gm.hud_draw_health(drone, bg_colour, pos_x-50, drone_y-5, 100, 12, true, hp_colour)
-            gm.draw_sprite_ext(drone.sprite_index, 1, pos_x+55, drone_y, 0.5, 0.5, 0.0, 16777215, 1) -- small drone picture
-            drone_y = drone_y + params['displacement_y']
+        
+        local friends = Helper.find_active_instance_all(gm.constants.pFriend)
+        -- Cycle through the friends
+        friend_y = params['pos_y']
+
+        for i, friend in ipairs(friends) do
+            if friend.user_name == nil then
+                ratio = friend.hp/friend.maxhp
+                hp_colour = gm.make_colour_rgb(maxhp_r*ratio+lowhp_r*(1-ratio),  maxhp_g*ratio+lowhp_g*(1-ratio), maxhp_b*ratio+lowhp_b*(1-ratio))
+
+                gm.draw_rectangle_colour(pos_x-53, (friend_y-8)*hud_scale, (pos_x+53)*hud_scale , (friend_y+10)*hud_scale, bg_colour, bg_colour, bg_colour, bg_colour, false) -- healthbare bg
+                gm.hud_draw_health(friend, bg_colour, (pos_x-50), (friend_y-5)*hud_scale, 100*hud_scale, 12*hud_scale, false, hp_colour)
+
+                if friend.sprite_index2 ~= nil then
+                    gm.draw_sprite_ext(friend.sprite_index2, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, 16777215, 1) -- small friend picture
+                end
+                gm.draw_sprite_ext(friend.sprite_index, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, 16777215, 1) -- small friend picture
+                gm.draw_set_font(5)
+                gm.draw_text_transformed(
+                    math.floor(pos_x+26)*hud_scale,
+                    (friend_y + 10) * hud_scale - 5,
+                    math.floor(friend.hp).."/"..math.floor(friend.maxhp),
+                    hud_scale,
+                    hud_scale,
+                    0)
+                friend_y = friend_y + params['displacement_y']
+            end
         end
-    
-        gm.surface_reset_target()
-        gm.draw_surface(surf_drones, gm.camera_get_view_x(cam), gm.camera_get_view_y(cam))
-        gm.surface_free(surf_drones) --do this or run out of memory
-        gm.draw_set_alpha(1)
     end
 end)
 
-gm.pre_script_hook(gm.constants.__input_system_tick, function(self, other, result, args)
-    zoom_scale = gm.prefs_get_hud_scale()
+gm.pre_script_hook(gm.constants.prefs_set_hud_scale, function(self, other, result, args)
+    hud_scale = args[1].value
+    sprite_scale = hud_scale*0.5
+end)
+
+gm.post_script_hook(gm.constants.stage_load_room, function(self, other, result, args)
+    hud_scale = gm.prefs_get_hud_scale()
+    sprite_scale = hud_scale*0.5
+end)
+
+gm.post_script_hook(gm.constants.UIOptionsGroupHeader, function(self, other, result, args)
+    options_menu = true
+end)
+
+gm.post_script_hook(gm.constants.save_prefs, function(self, other, result, args)
+    options_menu = false
 end)
