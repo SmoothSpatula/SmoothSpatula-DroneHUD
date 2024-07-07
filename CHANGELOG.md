@@ -11,3 +11,7 @@
 * Fixed default colours being 255 times too big
 * Draw changes (no longer using a surface)
 * HUD is hidden while browsing options
+
+### v1.0.3
+* Added Dynamic Resizing option in order to fit a lot more drones
+* Disabled HUD while chat is open
