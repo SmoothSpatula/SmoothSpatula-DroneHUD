@@ -1,4 +1,4 @@
--- DroneHUD v1.0.2
+-- DroneHUD v1.0.3
 -- SmoothSpatula
 log.info("Successfully loaded ".._ENV["!guid"]..".")
 mods.on_all_mods_loaded(function() for k, v in pairs(mods) do if type(v) == "table" and v.hfuncs then Helper = v end end end)
@@ -7,12 +7,14 @@ mods.on_all_mods_loaded(function() for k, v in pairs(mods) do if type(v) == "tab
 local maxhp_r, maxhp_g, maxhp_b = 136, 211,103
 local lowhp_r, lowhp_g, lowhp_b = 180, 73, 73
 local pos_x = 57
+local displacement_y = 22
 mods.on_all_mods_loaded(function() for k, v in pairs(mods) do if type(v) == "table" and v.tomlfuncs then Toml = v end end 
     params = {
         pos_x = 57,
         pos_y = 251,
         displacement_y = 22,
         drone_hud_enabled = true,
+        dynamic_displacement_y = true,
         healthbar_alpha = 1.0,
         maxhp_colour = {136/255, 211/255,103/255},
         lowhp_colour = {180/255, 73/255, 73/255},
@@ -26,7 +28,6 @@ end)
 
 -- ========== ImGui ==========
 
-local zoom_scale = 1.0
 gui.add_to_menu_bar(function()
     local new_value, clicked = ImGui.Checkbox("Enable Drone HUD", params['drone_hud_enabled'])
     if clicked then
@@ -36,7 +37,16 @@ gui.add_to_menu_bar(function()
 end)
 
 gui.add_to_menu_bar(function()
-    local new_value, clicked = ImGui.DragInt("X position from the  left part of the screen", params['pos_x'], 1, 0, gm.display_get_gui_width()//zoom_scale)
+    local new_value, clicked = ImGui.Checkbox("Enable Dynamic Height Resizing", params['dynamic_displacement_y'])
+    if clicked then
+        params['dynamic_displacement_y'] = new_value
+        Toml.save_cfg(_ENV["!guid"], params)
+    end
+    displacement_y = params['displacement_y']
+end)
+
+gui.add_to_menu_bar(function()
+    local new_value, clicked = ImGui.DragInt("X position from the  left part of the screen", params['pos_x'], 1, 0, gm.display_get_gui_width())
     if clicked then
         params['pos_x'] = new_value   
         pos_x = new_value
@@ -45,7 +55,7 @@ gui.add_to_menu_bar(function()
 end)
 
 gui.add_to_menu_bar(function()
-    local new_value, clicked = ImGui.DragInt("Y position from the top part of the screen", params['pos_y'], 1, 0, gm.display_get_gui_height()//zoom_scale)
+    local new_value, clicked = ImGui.DragInt("Y position from the top part of the screen", params['pos_y'], 1, 0, gm.display_get_gui_height())
     if clicked then
         params['pos_y'] = new_value
         Toml.save_cfg(_ENV["!guid"], params)
@@ -99,18 +109,19 @@ local hp_colour = gm.make_colour_rgb(136, 211,103)
 local hud_scale = 1.0
 local options_menu = false
 local sprite_scale = 0.5
-
+local chat_open = false
+local drone_count = 0
+local screen_height = 1080
 
 gm.post_code_execute(function(self, other, code, result, flags)
-    if not gm.variable_global_get("__run_exists") or options_menu then return end
+    if not gm.variable_global_get("__run_exists") or options_menu or chat_open or not params['drone_hud_enabled'] then return end
     if code.name:match("oInit_Draw_6") then
-        
-        
         local friends = Helper.find_active_instance_all(gm.constants.pFriend)
         -- Cycle through the friends
         friend_y = params['pos_y']
-
+        drone_count = 0
         for i, friend in ipairs(friends) do
+            drone_count = drone_count + 1
             if friend.user_name == nil then
                 ratio = friend.hp/friend.maxhp
                 hp_colour = gm.make_colour_rgb(maxhp_r*ratio+lowhp_r*(1-ratio),  maxhp_g*ratio+lowhp_g*(1-ratio), maxhp_b*ratio+lowhp_b*(1-ratio))
@@ -130,26 +141,46 @@ gm.post_code_execute(function(self, other, code, result, flags)
                     hud_scale,
                     hud_scale,
                     0)
-                friend_y = friend_y + params['displacement_y']
+                friend_y = friend_y + displacement_y
+            end
+        end
+        if params['dynamic_displacement_y'] then
+            screen_height = gm.camera_get_view_height(gm.view_get_camera(0))
+            if screen_height < (friend_y) * hud_scale and displacement_y > 4 then 
+                displacement_y = displacement_y - 1
+            elseif screen_height > (friend_y+drone_count) * hud_scale and displacement_y <params["displacement_y"] then
+                displacement_y = displacement_y + 1
             end
         end
     end
 end)
 
+-- check when scale is changed
 gm.pre_script_hook(gm.constants.prefs_set_hud_scale, function(self, other, result, args)
     hud_scale = args[1].value
     sprite_scale = hud_scale*0.5
 end)
 
+-- get params on loading level
 gm.post_script_hook(gm.constants.stage_load_room, function(self, other, result, args)
     hud_scale = gm.prefs_get_hud_scale()
     sprite_scale = hud_scale*0.5
+    displacement_y = params['displacement_y']
 end)
 
+-- disable overlay when opening options
 gm.post_script_hook(gm.constants.UIOptionsGroupHeader, function(self, other, result, args)
     options_menu = true
 end)
 
+-- reenable overlay when quit options
 gm.post_script_hook(gm.constants.save_prefs, function(self, other, result, args)
     options_menu = false
+end)
+
+-- check if chat is open
+gm.pre_code_execute(function(self, other, code, result, flags)
+    if code.name:match("oInit") then
+        chat_open = self.chat_talking
+    end
 end)
