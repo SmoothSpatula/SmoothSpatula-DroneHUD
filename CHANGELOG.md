@@ -15,3 +15,7 @@
 ### v1.0.3
 * Added Dynamic Resizing option in order to fit a lot more drones
 * Disabled HUD while chat is open
+
+### v1.0.4
+* Changed to faster post_code_execute
+* Fixed color error from floating point values
