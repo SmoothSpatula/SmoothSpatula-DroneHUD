@@ -1,8 +1,7 @@
--- DroneHUD v1.0.3
+-- DroneHUD v1.0.4
 -- SmoothSpatula
 log.info("Successfully loaded ".._ENV["!guid"]..".")
-mods.on_all_mods_loaded(function() for k, v in pairs(mods) do if type(v) == "table" and v.hfuncs then Helper = v end end end)
-
+mods["RoRRModdingToolkit-RoRR_Modding_Toolkit"].auto()
 
 local maxhp_r, maxhp_g, maxhp_b = 136, 211,103
 local lowhp_r, lowhp_g, lowhp_b = 180, 73, 73
@@ -100,12 +99,12 @@ end)
 
 -- ========== Main ==========
 
-local text_colour = 16777215 -- white
-local bg_colour = gm.make_colour_rgb(73,74,91)
+local text_colour = Color.WHITE -- white
+local bg_colour = Color.from_rgb(73,74,91)
 
 local friend_y = 0
 local ratio = 0
-local hp_colour = gm.make_colour_rgb(136, 211,103)
+local hp_colour = Color.from_rgb(136, 211,103)
 local hud_scale = 1.0
 local options_menu = false
 local sprite_scale = 0.5
@@ -113,45 +112,55 @@ local chat_open = false
 local drone_count = 0
 local screen_height = 1080
 
-gm.post_code_execute(function(self, other, code, result, flags)
-    if not gm.variable_global_get("__run_exists") or options_menu or chat_open or not params['drone_hud_enabled'] then return end
-    if code.name:match("oInit_Draw_6") then
-        local friends = Helper.find_active_instance_all(gm.constants.pFriend)
-        -- Cycle through the friends
-        friend_y = params['pos_y']
-        drone_count = 0
-        for i, friend in ipairs(friends) do
-            drone_count = drone_count + 1
-            if friend.user_name == nil then
-                ratio = friend.hp/friend.maxhp
-                hp_colour = gm.make_colour_rgb(maxhp_r*ratio+lowhp_r*(1-ratio),  maxhp_g*ratio+lowhp_g*(1-ratio), maxhp_b*ratio+lowhp_b*(1-ratio))
 
-                gm.draw_rectangle_colour(pos_x-53, (friend_y-8)*hud_scale, (pos_x+53)*hud_scale , (friend_y+10)*hud_scale, bg_colour, bg_colour, bg_colour, bg_colour, false) -- healthbare bg
-                gm.hud_draw_health(friend, bg_colour, (pos_x-50), (friend_y-5)*hud_scale, 100*hud_scale, 12*hud_scale, false, hp_colour)
+local draw_drones = function()
+    local friends = Instance.find_all(gm.constants.pFriend)
+    -- Cycle through the friends
+    friend_y = params['pos_y']
+    drone_count = 0
+    for i, friend in ipairs(friends) do
+        friend = friend.value
+        drone_count = drone_count + 1
+        if friend.user_name == nil then
+            ratio = friend.hp/friend.maxhp
 
-                if friend.sprite_index2 ~= nil then
-                    gm.draw_sprite_ext(friend.sprite_index2, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, 16777215, 1) -- small friend picture
-                end
-                gm.draw_sprite_ext(friend.sprite_index, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, 16777215, 1) -- small friend picture
-                gm.draw_set_font(5)
-                gm.draw_text_transformed(
-                    math.floor(pos_x+26)*hud_scale,
-                    (friend_y + 10) * hud_scale - 5,
-                    math.floor(friend.hp).."/"..math.floor(friend.maxhp),
-                    hud_scale,
-                    hud_scale,
-                    0)
-                friend_y = friend_y + displacement_y
+            local r = math.floor(maxhp_r*ratio+lowhp_r*(1-ratio))
+            local g = math.floor(maxhp_g*ratio+lowhp_g*(1-ratio))
+            local b = math.floor(maxhp_b*ratio+lowhp_b*(1-ratio))
+            hp_colour = Color.from_rgb(r, g, b)
+
+            gm.draw_rectangle_colour(pos_x-53, (friend_y-8)*hud_scale, (pos_x+53)*hud_scale , (friend_y+10)*hud_scale, bg_colour, bg_colour, bg_colour, bg_colour, false) -- healthbare bg
+            gm.hud_draw_health(friend, bg_colour, (pos_x-50), (friend_y-5)*hud_scale, 100*hud_scale, 12*hud_scale, false, hp_colour)
+
+            if friend.sprite_index2 ~= nil then
+                gm.draw_sprite_ext(friend.sprite_index2, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, Color.WHITE, 1) -- small friend picture
             end
+            gm.draw_sprite_ext(friend.sprite_index, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, Color.WHITE, 1) -- small friend picture
+            gm.draw_set_font(5)
+            gm.draw_text_transformed(
+                math.floor(pos_x+26)*hud_scale,
+                (friend_y + 10) * hud_scale - 5,
+                math.floor(friend.hp).."/"..math.floor(friend.maxhp),
+                hud_scale,
+                hud_scale,
+                0)
+            friend_y = friend_y + displacement_y
         end
-        if params['dynamic_displacement_y'] then
-            screen_height = gm.camera_get_view_height(gm.view_get_camera(0))
-            if screen_height < (friend_y) * hud_scale and displacement_y > 4 then 
-                displacement_y = displacement_y - 1
-            elseif screen_height > (friend_y+drone_count) * hud_scale and displacement_y <params["displacement_y"] then
-                displacement_y = displacement_y + 1
-            end
+    end
+    if params['dynamic_displacement_y'] then
+        screen_height = gm.camera_get_view_height(gm.view_get_camera(0))
+        if screen_height < (friend_y) * hud_scale and displacement_y > 4 then 
+            displacement_y = displacement_y - 1
+        elseif screen_height > (friend_y+drone_count) * hud_scale and displacement_y <params["displacement_y"] then
+            displacement_y = displacement_y + 1
         end
+    end
+end
+
+-- fast post code execute
+gm.post_code_execute("gml_Object_oInit_Draw_64", function(self, other)
+    if gm.variable_global_get("__run_exists") and not self.chat_talking and params['drone_hud_enabled'] then
+        draw_drones()
     end
 end)
 
@@ -163,7 +172,7 @@ end)
 
 -- get params on loading level
 gm.post_script_hook(gm.constants.stage_load_room, function(self, other, result, args)
-    hud_scale = gm.prefs_get_hud_scale()
+    hud_scale = gm.prefs_get_hud_scale() 
     sprite_scale = hud_scale*0.5
     displacement_y = params['displacement_y']
 end)
@@ -176,11 +185,4 @@ end)
 -- reenable overlay when quit options
 gm.post_script_hook(gm.constants.save_prefs, function(self, other, result, args)
     options_menu = false
-end)
-
--- check if chat is open
-gm.pre_code_execute(function(self, other, code, result, flags)
-    if code.name:match("oInit") then
-        chat_open = self.chat_talking
-    end
 end)
