@@ -1,7 +1,7 @@
 -- DroneHUD v1.0.4
 -- SmoothSpatula
 log.info("Successfully loaded ".._ENV["!guid"]..".")
-mods["RoRRModdingToolkit-RoRR_Modding_Toolkit"].auto()
+mods["RoRRModdingToolkit-RoRR_Modding_Toolkit"].auto(true)
 
 local maxhp_r, maxhp_g, maxhp_b = 136, 211,103
 local lowhp_r, lowhp_g, lowhp_b = 180, 73, 73
