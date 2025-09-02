@@ -1,4 +1,4 @@
--- DroneHUD v1.0.4
+-- DroneHUD v1.0.5
 -- SmoothSpatula
 log.info("Successfully loaded ".._ENV["!guid"]..".")
 mods["RoRRModdingToolkit-RoRR_Modding_Toolkit"].auto(true)
@@ -17,7 +17,6 @@ mods.on_all_mods_loaded(function() for k, v in pairs(mods) do if type(v) == "tab
         healthbar_alpha = 1.0,
         maxhp_colour = {136/255, 211/255,103/255},
         lowhp_colour = {180/255, 73/255, 73/255},
-
     }
     params = Toml.config_update(_ENV["!guid"], params) -- Load Save
     maxhp_r, maxhp_g, maxhp_b = math.floor(params['maxhp_colour'][1]*255), math.floor(params['maxhp_colour'][2]*255), math.floor(params['maxhp_colour'][3]*255)
@@ -113,7 +112,7 @@ local drone_count = 0
 local screen_height = 1080
 
 
-local draw_drones = function()
+local draw_drones = function(self, other)
     local friends = Instance.find_all(gm.constants.pFriend)
     -- Cycle through the friends
     friend_y = params['pos_y']
@@ -133,9 +132,11 @@ local draw_drones = function()
             gm.hud_draw_health(friend, bg_colour, (pos_x-50), (friend_y-5)*hud_scale, 100*hud_scale, 12*hud_scale, false, hp_colour)
 
             if friend.sprite_index2 ~= nil then
-                gm.draw_sprite_ext(friend.sprite_index2, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, Color.WHITE, 1) -- small friend picture
+                gm.call("draw_sprite_ext", self, other, friend.sprite_index2, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, Color.WHITE, 1) -- small friend picture
             end
-            gm.draw_sprite_ext(friend.sprite_index, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, Color.WHITE, 1) -- small friend picture
+            gm.call("draw_sprite_ext", self, other, friend.sprite_index, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, Color.WHITE, 1)
+            
+            
             gm.draw_set_font(5)
             gm.draw_text_transformed(
                 math.floor(pos_x+26)*hud_scale,
@@ -160,7 +161,7 @@ end
 -- fast post code execute
 gm.post_code_execute("gml_Object_oInit_Draw_64", function(self, other)
     if gm.variable_global_get("__run_exists") and not self.chat_talking and params['drone_hud_enabled'] then
-        draw_drones()
+        draw_drones(self, other)
     end
 end)
 
