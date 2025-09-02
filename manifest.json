@@ -4,8 +4,8 @@
 	"website_url": "https://github.com/SmoothSpatula/SmoothSpatula-DroneHUD",
 	"description": "Displays your drone's health on the HUD, as well as your turrets and other friends.",
 	"dependencies": [
-		"ReturnOfModding-ReturnOfModding-1.0.47",
-		"RoRRModdingToolkit-RoRR_Modding_Toolkit-1.1.21",
-		"SmoothSpatula-TomlHelper-1.0.1"
+		"ReturnOfModding-ReturnOfModding-1.0.80",
+		"RoRRModdingToolkit-RoRR_Modding_Toolkit-1.2.21",
+		"SmoothSpatula-TomlHelper-1.1.1"
 	]
 }
