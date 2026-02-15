@@ -1,28 +1,28 @@
--- DroneHUD v1.0.5
+-- DroneHUD v1.1.0
 -- SmoothSpatula
-log.info("Successfully loaded ".._ENV["!guid"]..".")
-mods["RoRRModdingToolkit-RoRR_Modding_Toolkit"].auto(true)
+
+local RAPI = mods["ReturnsAPI-ReturnsAPI"].setup()
+mods["SmoothSpatula-TomlHelper"].auto()
 
 local maxhp_r, maxhp_g, maxhp_b = 136, 211,103
 local lowhp_r, lowhp_g, lowhp_b = 180, 73, 73
 local pos_x = 57
 local displacement_y = 22
-mods.on_all_mods_loaded(function() for k, v in pairs(mods) do if type(v) == "table" and v.tomlfuncs then Toml = v end end 
-    params = {
-        pos_x = 57,
-        pos_y = 251,
-        displacement_y = 22,
-        drone_hud_enabled = true,
-        dynamic_displacement_y = true,
-        healthbar_alpha = 1.0,
-        maxhp_colour = {136/255, 211/255,103/255},
-        lowhp_colour = {180/255, 73/255, 73/255},
-    }
-    params = Toml.config_update(_ENV["!guid"], params) -- Load Save
-    maxhp_r, maxhp_g, maxhp_b = math.floor(params['maxhp_colour'][1]*255), math.floor(params['maxhp_colour'][2]*255), math.floor(params['maxhp_colour'][3]*255)
-    lowhp_r, lowhp_g, lowhp_b = math.floor(params['lowhp_colour'][1]*255), math.floor(params['lowhp_colour'][2]*255), math.floor(params['lowhp_colour'][3]*255)
-    pos_x = params['pos_x']
-end)
+
+params = {
+    pos_x = 57,
+    pos_y = 251,
+    displacement_y = 22,
+    drone_hud_enabled = true,
+    dynamic_displacement_y = true,
+    healthbar_alpha = 1.0,
+    maxhp_colour = {136/255, 211/255,103/255},
+    lowhp_colour = {180/255, 73/255, 73/255},
+}
+params = Toml.config_update(_ENV["!guid"], params) -- Load Save
+maxhp_r, maxhp_g, maxhp_b = math.floor(params['maxhp_colour'][1]*255), math.floor(params['maxhp_colour'][2]*255), math.floor(params['maxhp_colour'][3]*255)
+lowhp_r, lowhp_g, lowhp_b = math.floor(params['lowhp_colour'][1]*255), math.floor(params['lowhp_colour'][2]*255), math.floor(params['lowhp_colour'][3]*255)
+pos_x = params['pos_x']
 
 -- ========== ImGui ==========
 
@@ -98,12 +98,11 @@ end)
 
 -- ========== Main ==========
 
-local text_colour = Color.WHITE -- white
-local bg_colour = Color.from_rgb(73,74,91)
-
+local text_colour = RAPI.Color.WHITE
+local bg_colour = RAPI.Color.from_rgb(73,74,91)
 local friend_y = 0
 local ratio = 0
-local hp_colour = Color.from_rgb(136, 211,103)
+local hp_colour = RAPI.Color.from_rgb(maxhp_r, maxhp_g, maxhp_b)
 local hud_scale = 1.0
 local options_menu = false
 local sprite_scale = 0.5
@@ -111,9 +110,8 @@ local chat_open = false
 local drone_count = 0
 local screen_height = 1080
 
-
 local draw_drones = function(self, other)
-    local friends = Instance.find_all(gm.constants.pFriend)
+    local friends = RAPI.Instance.find_all(gm.constants.pFriend)
     -- Cycle through the friends
     friend_y = params['pos_y']
     drone_count = 0
@@ -126,15 +124,15 @@ local draw_drones = function(self, other)
             local r = math.floor(maxhp_r*ratio+lowhp_r*(1-ratio))
             local g = math.floor(maxhp_g*ratio+lowhp_g*(1-ratio))
             local b = math.floor(maxhp_b*ratio+lowhp_b*(1-ratio))
-            hp_colour = Color.from_rgb(r, g, b)
+            hp_colour = RAPI.Color.from_rgb(r, g, b)
 
             gm.draw_rectangle_colour(pos_x-53, (friend_y-8)*hud_scale, (pos_x+53)*hud_scale , (friend_y+10)*hud_scale, bg_colour, bg_colour, bg_colour, bg_colour, false) -- healthbare bg
             gm.hud_draw_health(friend, bg_colour, (pos_x-50), (friend_y-5)*hud_scale, 100*hud_scale, 12*hud_scale, false, hp_colour)
 
             if friend.sprite_index2 ~= nil then
-                gm.call("draw_sprite_ext", self, other, friend.sprite_index2, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, Color.WHITE, 1) -- small friend picture
+                gm.call("draw_sprite_ext", self, other, friend.sprite_index2, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, RAPI.Color.WHITE, 1) -- small friend picture
             end
-            gm.call("draw_sprite_ext", self, other, friend.sprite_index, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, Color.WHITE, 1)
+            gm.call("draw_sprite_ext", self, other, friend.sprite_index, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, RAPI.Color.WHITE, 1)
             
             
             gm.draw_set_font(5)
@@ -187,3 +185,5 @@ end)
 gm.post_script_hook(gm.constants.save_prefs, function(self, other, result, args)
     options_menu = false
 end)
+
+log.info("Successfully loaded ".._ENV["!guid"]..".")

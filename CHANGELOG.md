@@ -1,3 +1,6 @@
+### v1.1.0
+* Move to RAPI
+
 ### v1.0.5
 * Fixed draw_sprite_ext for v1.1.0 of RoRR
 
