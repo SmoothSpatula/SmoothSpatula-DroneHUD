@@ -6,6 +6,7 @@ Displays your drone's health, as well as your turrets and friends on the HUD. Wo
 * The Return Of Modding team
 * You for playing this mod
 * Feathertoes for raising issues
+* GreenAlen22 for adding shield display
 
 ## Contact
 For questions or bug reports, you can find us in the [RoRR Modding Server](https://discord.gg/VjS57cszMq) @Miguelito @Umigatari

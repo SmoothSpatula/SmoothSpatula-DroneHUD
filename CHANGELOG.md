@@ -1,3 +1,6 @@
+### v1.1.1
+* Added support for displaying shield to accommodate DeerItems
+
 ### v1.1.0
 * Move to RAPI
 

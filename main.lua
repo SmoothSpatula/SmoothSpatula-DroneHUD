@@ -1,4 +1,3 @@
--- DroneHUD v1.1.0
 -- SmoothSpatula
 
 local RAPI = mods["ReturnsAPI-ReturnsAPI"].setup()
@@ -103,6 +102,7 @@ local bg_colour = RAPI.Color.from_rgb(73,74,91)
 local friend_y = 0
 local ratio = 0
 local hp_colour = RAPI.Color.from_rgb(maxhp_r, maxhp_g, maxhp_b)
+local shield_colour = RAPI.Color.from_rgb(88, 166, 255)
 local hud_scale = 1.0
 local options_menu = false
 local sprite_scale = 0.5
@@ -120,6 +120,10 @@ local draw_drones = function(self, other)
         drone_count = drone_count + 1
         if friend.user_name == nil then
             ratio = friend.hp/friend.maxhp
+            local maxshield = math.max(friend.maxshield or 0, 0)
+            local shield = math.min(math.max(friend.shield or 0, 0), maxshield)
+            local health = math.min(math.max(friend.hp, 0), friend.maxhp)
+            local total = friend.maxhp + maxshield
 
             local r = math.floor(maxhp_r*ratio+lowhp_r*(1-ratio))
             local g = math.floor(maxhp_g*ratio+lowhp_g*(1-ratio))
@@ -127,7 +131,16 @@ local draw_drones = function(self, other)
             hp_colour = RAPI.Color.from_rgb(r, g, b)
 
             gm.draw_rectangle_colour(pos_x-53, (friend_y-8)*hud_scale, (pos_x+53)*hud_scale , (friend_y+10)*hud_scale, bg_colour, bg_colour, bg_colour, bg_colour, false) -- healthbare bg
-            gm.hud_draw_health(friend, bg_colour, (pos_x-50), (friend_y-5)*hud_scale, 100*hud_scale, 12*hud_scale, false, hp_colour)
+            local bar_x = pos_x - 50
+            local bar_y = (friend_y - 5) * hud_scale
+            local bar_width = 100 * hud_scale
+            local bar_height = 12 * hud_scale
+            local health_width = bar_width * health / total
+            gm.draw_rectangle_colour(bar_x, bar_y, bar_x + health_width, bar_y + bar_height, hp_colour, hp_colour, hp_colour, hp_colour, false)
+            if shield > 0 then
+                local shield_width = bar_width * shield / total
+                gm.draw_rectangle_colour(bar_x + health_width, bar_y, bar_x + health_width + shield_width, bar_y + bar_height, shield_colour, shield_colour, shield_colour, shield_colour, false)
+            end
 
             if friend.sprite_index2 ~= nil then
                 gm.call("draw_sprite_ext", self, other, friend.sprite_index2, 1, (pos_x+55)*hud_scale, friend_y*hud_scale, sprite_scale, sprite_scale, 0.0, RAPI.Color.WHITE, 1) -- small friend picture
@@ -139,7 +152,7 @@ local draw_drones = function(self, other)
             gm.draw_text_transformed(
                 math.floor(pos_x+26)*hud_scale,
                 (friend_y + 10) * hud_scale - 5,
-                math.floor(friend.hp).."/"..math.floor(friend.maxhp),
+                math.floor(health + shield).."/"..math.floor(friend.maxhp),
                 hud_scale,
                 hud_scale,
                 0)
